@@ -1,43 +1,36 @@
 #![no_std]
 #![no_main]
-mod vga_buffer;
+#![feature(custom_test_frameworks)]
+#![test_runner(pertunia::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-
-// #![reexport_test_harness_main = "test_main"]
+use pertunia::println;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     println!("Hello World{}", "!");
 
-    // #[cfg(test)]
-    // test_main();
+    #[cfg(test)]
+    test_main();
 
     loop {}
 }
 
-/// This function is called on panic.
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-
     loop {}
 }
 
-// #![feature(custom_test_frameworks)]
-// #![test_runner(crate::test_runner)]
-
 #[cfg(test)]
-fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
-    for test in tests {
-        test();
-    }
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    pertunia::test_panic_handler(info)
 }
 
-// #[test_case]
-// fn trivial_assertion() {
-//     print!("trivial assertion... ");
-//     assert_eq!(1, 1);
-//     println!("[ok]");
-// }
+#[test_case]
+fn trivial_assertion() {
+    assert_eq!(1, 1);
+}
